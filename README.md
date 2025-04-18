@@ -45,7 +45,7 @@ This project explores these elements using SQL for structured, in-depth analysis
 
 ---
 
-## Schema
+## **Schema**
 
 DROP TABLE IF EXISTS netflix;
 CREATE TABLE netflix
