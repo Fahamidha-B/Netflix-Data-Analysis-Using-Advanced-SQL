@@ -132,9 +132,88 @@ where director like '%Rajiv Chilaka%';
 
 ## 8. **List All TV Shows with More Than 5 Seasons**
 
-select unnest(STRING_TO_ARRAY(listed_in,',')) as genre,
-	count(show_id) as number_of_contents
+SELECT *
+FROM netflix
+WHERE type = 'TV Show'
+  AND SPLIT_PART(duration, ' ', 1)::INT > 5;  ------------1 defines splitted genre(unnest(STRING_TO_ARRAY(listed_in,',')))
+
+## 9. **Count the Number of Content Items in Each Genre**
+
+SELECT 
+    UNNEST(STRING_TO_ARRAY(listed_in, ',')) AS genre,
+    COUNT(*) AS total_content
+FROM netflix
+GROUP BY 1;
+
+## 10.**Find each year and the average numbers of content release in India on netflix.return top 5 years with average content relase**
+
+SELECT 
+    country,
+    release_year,
+    COUNT(show_id) AS total_release,
+    ROUND(
+        COUNT(show_id)::numeric /(SELECT COUNT(show_id) FROM netflix WHERE country = 'India')::numeric * 100, 2) AS avg_release
+FROM netflix
+WHERE country = 'India'
+GROUP BY country, release_year
+ORDER BY avg_release DESC
+LIMIT 5;
+
+## 11.**list all movies that are documentries**
+select show_id,type, unnest(STRING_TO_ARRAY(listed_in,',')) as new_list
 from netflix
-group by 1;  ------------1 defines splitted genre(unnest(STRING_TO_ARRAY(listed_in,',')))
-	
+where listed_in like '%Documentaries%' and type='Movie';
+
+## 12.**find  all content without a director**
+
+
+select * 
+from netflix
+where director is null;
+
+## 13. **find how many movies actoe salman khan apperars last 10 years**
+
+
+select *
+from netflix
+where casts ilike '%salman Khan%' and release_year > EXTRACT(YEAR FROM CURRENT_DATE) - 10;
+
+ ## 14. ** Find the Top 10 Actors Who Have Appeared in the Highest Number of Movies Produced in India**
+
+
+	SELECT 
+    UNNEST(STRING_TO_ARRAY(casts, ',')) AS actor,
+    COUNT(*)
+FROM netflix
+WHERE country = 'India'
+GROUP BY actor
+ORDER BY COUNT(*) DESC
+LIMIT 10;
+
+## 15.**Categorize Content Based on the Presence of 'Kill' and 'Violence' Keywords**
+
+select *,
+	case 
+	when description ilike '%kill%'
+		or description ilike '%violence%' then 'bad_content' 
+		else 'good_content'
+	end catergory
+from netflix;
+
+
+-- use CTE common table expression
+
+WITH new_table AS (
+  SELECT *,
+    CASE 
+      WHEN description ILIKE '%kill%' OR description ILIKE '%violence%' THEN 'bad_content' 
+      ELSE 'good_content'
+    END AS category
+  FROM netflix
+)
+
+SELECT category, COUNT(*) as total_movie
+FROM new_table
+GROUP BY category
+order by total_movie desc;
 
